@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌾 HayDay - Almacén Comunitario</title>
   <link rel="stylesheet" href="style.css">
+  <!-- 1. Librería de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -29,13 +31,13 @@
 
       <div class="stock-badge">
         <span>Stock disponible:</span>
-        <strong id="totalStock">0 / 0</strong>
+        <strong id="totalStock">Cargando...</strong>
       </div>
     </section>
 
     <main>
       <div id="products" class="product-list">
-        <!-- Renderizado dinámico -->
+        <p>Cargando productos desde la base de datos...</p>
       </div>
 
       <div class="action-footer">
@@ -46,7 +48,9 @@
     </main>
   </div>
 
-  <script src="products.js"></script>
+  <!-- 2. Configuración y conexión -->
+  <script src="config.js"></script>
+  <!-- 3. Lógica de la aplicación -->
   <script src="app.js"></script>
 </body>
 </html>
