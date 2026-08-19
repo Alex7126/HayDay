@@ -1,11 +1,43 @@
 // app.js
 
+const PRODUCTS_DATA = [
+  ["langosta", "🦞 Langosta", 1000],
+  ["pescado", "🐟 Pescado", 1000],
+  ["miel", "🍯 Miel", 1000],
+  ["nata", "🥛 Nata", 1000],
+  ["mantequilla", "🧈 Mantequilla", 1000],
+  ["queso_vaca", "🧀 Queso de vaca", 1000],
+  ["queso_cabra", "🐐 Queso de cabra", 1000],
+  ["leche", "🥛 Leche", 1000],
+  ["huevo", "🥚 Huevo", 1000],
+  ["beicon", "🥓 Beicon", 1000],
+  ["pan", "🍞 Pan", 1000],
+  ["pan_maiz", "🌽 Pan de maíz", 1000],
+  ["tela", "🧵 Tela", 1000],
+  ["sierras", "🪚 Sierras", 1000],
+  ["hachas", "🪓 Hachas", 1000],
+  ["tnt", "💣 TNT", 1000],
+  ["dinamita", "🧨 Dinamita", 1000],
+  ["palas", "⛏️ Palas", 1000],
+  ["azucar_morena", "🟤 Azúcar morena", 1000],
+  ["azucar_blanca", "⚪ Azúcar blanca", 1000],
+  ["almibar", "🍯 Almíbar", 1000],
+  ["galletas", "🍪 Galletas", 1000],
+  ["especial", "⭐ Producto especial", 1000]
+];
+
+const CONFIG = {
+  adminWhatsApp: "527221017160",
+  neighborhoods: ["Crueles", "Dráculas"],
+  storageKey: "hayDayShop_v3" // Clave nueva para forzar reseteo a 1000
+};
+
 function initialData() {
   const data = {};
   for (const neighborhood of CONFIG.neighborhoods) {
     data[neighborhood] = {};
     for (const [id, name, stock] of PRODUCTS_DATA) {
-      data[neighborhood][id] = stock; // 1,000 a cada producto
+      data[neighborhood][id] = stock;
     }
   }
   return data;
@@ -26,13 +58,18 @@ function saveStock(data) {
 }
 
 function renderProducts() {
-  const neighborhood = document.getElementById("neighborhood").value;
+  const neighborhoodSelect = document.getElementById("neighborhood");
+  if (!neighborhoodSelect) return;
+
+  const neighborhood = neighborhoodSelect.value;
   const stock = getStock()[neighborhood] || {};
   const container = document.getElementById("products");
+  
+  if (!container) return;
   container.innerHTML = "";
 
   for (const [id, name] of PRODUCTS_DATA) {
-    const available = stock[id] ?? 0;
+    const available = stock[id] !== undefined ? stock[id] : 1000;
     const row = document.createElement("div");
     row.className = "product";
     row.innerHTML = `
@@ -104,11 +141,10 @@ document.getElementById("submitOrder").addEventListener("click", () => {
   });
 
   if (!selected.length) {
-    showResult("<strong>No seleccionaste productos.</strong><br>Elige al menos un producto con el selector (+) antes de enviar.", false);
+    showResult("<strong>No seleccionaste productos.</strong><br>Usa el botón (+) para elegir cantidades.", false);
     return;
   }
 
-  // Validación de existencias
   for (const item of selected) {
     if (item.qty > stock[item.id]) {
       const product = PRODUCTS_DATA.find(p => p[0] === item.id);
@@ -117,13 +153,11 @@ document.getElementById("submitOrder").addEventListener("click", () => {
     }
   }
 
-  // Descontar inventario local
   for (const item of selected) {
     stock[item.id] -= item.qty;
   }
   saveStock(data);
 
-  // Armar lista para pantalla y WhatsApp
   let waMessage = `🚜 *SOLICITUD HAYDAY*\n`;
   waMessage += `👤 *Jugador:* ${name}\n`;
   waMessage += `🏡 *Vecindario:* ${neighborhood}\n\n`;
@@ -139,17 +173,17 @@ document.getElementById("submitOrder").addEventListener("click", () => {
     <h3>✅ Solicitud registrada</h3>
     <p><strong>${name}</strong> — Vecindario: <strong>${neighborhood}</strong></p>
     <ul>${lines}</ul>
-    <p>Redirigiendo a WhatsApp para confirmar el pedido...</p>
+    <p>Abriendo WhatsApp para confirmar...</p>
   `, true);
 
   renderProducts();
 
-  // Abrir WhatsApp automáticamente
   const waUrl = `https://wa.me/${CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
   setTimeout(() => {
     window.open(waUrl, "_blank");
-  }, 1000);
+  }, 800);
 });
 
-// Inicialización
+// Ejecutar al cargar la página
+window.addEventListener("DOMContentLoaded", renderProducts);
 renderProducts();
