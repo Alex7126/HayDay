@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - HayDay</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚙️ Panel de Administración</h1>
+      <p>Inventario y pedidos en tiempo real (Crueles y Dráculas)</p>
+    </header>
+
+    <section class="card controls-panel">
+      <h3>➕ Agregar o Modificar Stock</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; width:100%; margin-top:10px;">
+        <input type="text" id="p-code" placeholder="Código (ej. pan)" required>
+        <input type="text" id="p-name" placeholder="Nombre (ej. 🍞 Pan)" required>
+        <input type="number" id="p-stock" placeholder="Stock" value="1000" required>
+        <select id="p-neighborhood">
+          <option value="Crueles">Crueles</option>
+          <option value="Dráculas">Dráculas</option>
+        </select>
+        <button id="btn-save-prod" type="button">Guardar / Actualizar</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom:20px;">
+      <h2>📦 Inventario en Supabase</h2>
+      <br>
+      <table style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Vecindario</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-tbody">
+          <tr><td colspan="4">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>📥 Solicitudes Recibidas</h2>
+      <br>
+      <table style="width:100%;">
+        <thead>
+          <tr>
+            <th>Jugador</th>
+            <th>Vecindario</th>
+            <th>Pedido</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="requests-tbody">
+          <tr><td colspan="4">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
