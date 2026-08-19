@@ -3,26 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌾 HayDay - Almacén Comunitario</title>
+  <title>🌾 HayDay - Cruel vs Dráculas</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
     <header>
-      <!-- Logo Oficial de Hay Day -->
-      <img src="logo.png" alt="Logo Hay Day" class="main-logo">
-      <p>🚜 Almacén Comunitario: Crueles & Dráculas 🌾</p>
+      <img src="logo.png" alt="Cruel vs Dráculas" class="main-logo">
+      <p>🌾 Almacén Comunitario: Crueles & Dráculas 🚜</p>
     </header>
 
     <section class="card controls-panel">
       <div class="form-group">
-        <label for="playerName">🧑‍🌾 Tu nombre de granjero:</label>
+        <label for="playerName">🧑‍🌾 Tu nombre en el juego:</label>
         <input type="text" id="playerName" placeholder="Ej. Alex" required>
       </div>
 
       <div class="form-group">
-        <label for="neighborhood">🏡 Selecciona tu Vecindario:</label>
+        <label for="neighborhood">🏡 Vecindario:</label>
         <select id="neighborhood">
           <option value="Crueles">Crueles</option>
           <option value="Dráculas">Dráculas</option>
@@ -35,14 +35,14 @@
       </div>
 
       <div class="stock-badge" style="background:#fff9db; color:#8d5b2d; border-color:#ffe066;">
-        <span>📦 Productos en tu carrito:</span>
+        <span>📦 Productos en tu pedido:</span>
         <strong id="currentOrderCount">0 productos</strong>
       </div>
     </section>
 
-   <main>
+    <main>
       <div id="products" class="product-list">
-        <p style="text-align:center; padding:15px; color:#fff; font-weight:bold;">Cargando productos...</p>
+        <p style="text-align:center; padding:15px; color:#fff; font-weight:bold;">Cargando catálogo...</p>
       </div>
 
       <div class="action-footer">
@@ -53,23 +53,10 @@
     </main>
   </div>
 
-  <!-- Gallinita tierna espía en SVG -->
+  <!-- Gallinita espía animada -->
   <div id="peeking-chicken" class="peeking-chicken hidden">
     <div class="chicken-bubble">👀 ¡Pío!</div>
-    <svg viewBox="0 0 100 95" width="70" height="65">
-      <ellipse cx="50" cy="58" rx="38" ry="34" fill="#FFFDF0" stroke="#E0D7B8" stroke-width="2.5"/>
-      <path d="M 20 60 Q 50 82 80 60" stroke="#DCD3B2" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
-      <path d="M 42 26 C 42 16, 50 16, 50 26 C 50 14, 60 14, 60 26" fill="#FF5252"/>
-      <circle cx="28" cy="62" r="7" fill="#FFB4B4" opacity="0.75"/>
-      <circle cx="72" cy="62" r="7" fill="#FFB4B4" opacity="0.75"/>
-      <ellipse cx="36" cy="50" rx="6.5" ry="8.5" fill="#2C3A47"/>
-      <circle cx="34" cy="47" r="2.8" fill="#FFFFFF"/>
-      <ellipse cx="64" cy="50" rx="6.5" ry="8.5" fill="#2C3A47"/>
-      <circle cx="62" cy="47" r="2.8" fill="#FFFFFF"/>
-      <polygon points="44,56 56,56 50,67" fill="#FFA801"/>
-      <ellipse cx="38" cy="88" rx="8" ry="4.5" fill="#FFA801"/>
-      <ellipse cx="62" cy="88" rx="8" ry="4.5" fill="#FFA801"/>
-    </svg>
+    <img src="gallina.png" alt="Gallina Espía" style="width: 65px; height: auto; display: block;">
   </div>
 
   <script src="config.js"></script>
