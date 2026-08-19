@@ -18,12 +18,27 @@
 }
 
 body {
-  background: #1b2838 url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+  /* Fondo panorámico con tu archivo logo.png */
+  background: #1b2838 url('logo.png') no-repeat center center fixed;
   background-size: cover;
   color: var(--text);
   padding: 20px 15px;
   min-height: 100vh;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* Sombra suave de fondo para mejorar la legibilidad */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(13, 23, 33, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 0;
 }
 
 .container {
@@ -33,7 +48,7 @@ body {
   z-index: 2;
 }
 
-/* Encabezado */
+/* Encabezado con tu nuevo logo2.png */
 header {
   text-align: center;
   margin-bottom: 20px;
@@ -47,8 +62,14 @@ header {
   object-fit: cover !important;
   border-radius: 50% !important;
   border: 4px solid #ffffff !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
   display: inline-block !important;
+  animation: logoBreath 4s ease-in-out infinite alternate;
+}
+
+@keyframes logoBreath {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03) rotate(1deg); }
 }
 
 header p {
@@ -59,13 +80,13 @@ header p {
   margin-top: 10px;
 }
 
-/* Tarjetas */
+/* Tarjetas y Formularios */
 .card {
   background: var(--card-bg);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 18px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
   border: 2px solid #a5d6a7;
 }
 
@@ -201,7 +222,7 @@ input:focus, select:focus {
   box-shadow: none;
 }
 
-/* 🐣 GALLINITA VIAJERA CON TAMAÑO BLINDADO */
+/* 🐣 GALLINITA FLOTANTE SIN FONDO BLANCO */
 .roaming-chicken {
   position: fixed;
   z-index: 9999;
@@ -222,7 +243,7 @@ input:focus, select:focus {
   font-size: 0.75rem;
   font-weight: 800;
   color: #d35400;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
   border: 2px solid #ffeaa7;
   margin-bottom: 2px;
   white-space: nowrap;
@@ -235,7 +256,9 @@ input:focus, select:focus {
   max-height: 70px !important;
   object-fit: contain !important;
   display: block !important;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
+  /* Elimina el recuadro blanco de la foto automáticamente */
+  mix-blend-mode: multiply;
+  filter: contrast(1.1) brightness(1.05);
 }
 
 /* Resultados */
