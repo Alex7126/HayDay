@@ -1,85 +1,46 @@
 // app.js
 
-const PRODUCTS_DATA = [
-  ["langosta", "🦞 Langosta", 1000],
-  ["pescado", "🐟 Pescado", 1000],
-  ["miel", "🍯 Miel", 1000],
-  ["nata", "🥛 Nata", 1000],
-  ["mantequilla", "🧈 Mantequilla", 1000],
-  ["queso_vaca", "🧀 Queso de vaca", 1000],
-  ["queso_cabra", "🐐 Queso de cabra", 1000],
-  ["leche", "🥛 Leche", 1000],
-  ["huevo", "🥚 Huevo", 1000],
-  ["beicon", "🥓 Beicon", 1000],
-  ["pan", "🍞 Pan", 1000],
-  ["pan_maiz", "🌽 Pan de maíz", 1000],
-  ["tela", "🧵 Tela", 1000],
-  ["sierras", "🪚 Sierras", 1000],
-  ["hachas", "🪓 Hachas", 1000],
-  ["tnt", "💣 TNT", 1000],
-  ["dinamita", "🧨 Dinamita", 1000],
-  ["palas", "⛏️ Palas", 1000],
-  ["azucar_morena", "🟤 Azúcar morena", 1000],
-  ["azucar_blanca", "⚪ Azúcar blanca", 1000],
-  ["almibar", "🍯 Almíbar", 1000],
-  ["galletas", "🍪 Galletas", 1000],
-  ["especial", "⭐ Producto especial", 1000]
-];
+async function getStockFromDB(neighborhood) {
+  const { data, error } = await supabaseClient
+    .from("productos")
+    .select("*")
+    .eq("vecindario", neighborhood);
 
-const CONFIG = {
-  adminWhatsApp: "527221017160",
-  neighborhoods: ["Crueles", "Dráculas"],
-  storageKey: "hayDayShop_v3" // Clave nueva para forzar reseteo a 1000
-};
-
-function initialData() {
-  const data = {};
-  for (const neighborhood of CONFIG.neighborhoods) {
-    data[neighborhood] = {};
-    for (const [id, name, stock] of PRODUCTS_DATA) {
-      data[neighborhood][id] = stock;
-    }
+  if (error) {
+    console.error("Error al obtener stock:", error);
+    return [];
   }
-  return data;
+  return data || [];
 }
 
-function getStock() {
-  const saved = localStorage.getItem(CONFIG.storageKey);
-  if (!saved) {
-    const fresh = initialData();
-    localStorage.setItem(CONFIG.storageKey, JSON.stringify(fresh));
-    return fresh;
-  }
-  return JSON.parse(saved);
-}
-
-function saveStock(data) {
-  localStorage.setItem(CONFIG.storageKey, JSON.stringify(data));
-}
-
-function renderProducts() {
-  const neighborhoodSelect = document.getElementById("neighborhood");
-  if (!neighborhoodSelect) return;
-
-  const neighborhood = neighborhoodSelect.value;
-  const stock = getStock()[neighborhood] || {};
+async function renderProducts() {
+  const neighborhood = document.getElementById("neighborhood").value;
   const container = document.getElementById("products");
-  
-  if (!container) return;
-  container.innerHTML = "";
+  container.innerHTML = "<p>Cargando productos desde la base de datos...</p>";
 
-  for (const [id, name] of PRODUCTS_DATA) {
-    const available = stock[id] !== undefined ? stock[id] : 1000;
+  const products = await getStockFromDB(neighborhood);
+
+  if (products.length === 0) {
+    container.innerHTML = "<p>No hay productos registrados para este vecindario.</p>";
+    document.getElementById("totalStock").textContent = "0 / 0";
+    return;
+  }
+
+  container.innerHTML = "";
+  let totalStock = 0;
+
+  products.forEach(prod => {
+    totalStock += prod.stock;
     const row = document.createElement("div");
     row.className = "product";
     row.innerHTML = `
       <div>
-        <div class="product-name">${name}</div>
-        <div class="product-stock">${available} disponibles</div>
+        <div class="product-name">${prod.nombre}</div>
+        <div class="product-stock">${prod.stock} disponibles</div>
       </div>
       <div class="qty">
         <button type="button" data-action="minus">−</button>
-        <input type="number" min="0" max="${available}" value="0" data-id="${id}">
+        <input type="number" min="0" max="${prod.stock}" value="0" data-id="${prod.id}" data-name="${prod.nombre}" data-stock="${prod.stock}">
         <button type="button" data-action="plus">+</button>
       </div>
     `;
@@ -89,23 +50,16 @@ function renderProducts() {
       input.value = Math.max(0, Number(input.value) - 1);
     };
     row.querySelector('[data-action="plus"]').onclick = () => {
-      input.value = Math.min(available, Number(input.value) + 1);
+      input.value = Math.min(prod.stock, Number(input.value) + 1);
     };
     input.addEventListener("change", () => {
-      input.value = Math.max(0, Math.min(available, Number(input.value) || 0));
+      input.value = Math.max(0, Math.min(prod.stock, Number(input.value) || 0));
     });
 
     container.appendChild(row);
-  }
-  updateTotal();
-}
+  });
 
-function updateTotal() {
-  const neighborhood = document.getElementById("neighborhood").value;
-  const stock = getStock()[neighborhood] || {};
-  const total = Object.values(stock).reduce((a, b) => a + b, 0);
-  const max = PRODUCTS_DATA.reduce((a, p) => a + p[2], 0);
-  document.getElementById("totalStock").textContent = `${total} / ${max}`;
+  document.getElementById("totalStock").textContent = `${totalStock} disponibles`;
 }
 
 function showResult(html, ok = true) {
@@ -122,7 +76,7 @@ document.getElementById("neighborhood").addEventListener("change", () => {
   renderProducts();
 });
 
-document.getElementById("submitOrder").addEventListener("click", () => {
+document.getElementById("submitOrder").addEventListener("click", async () => {
   const name = document.getElementById("playerName").value.trim();
   const neighborhood = document.getElementById("neighborhood").value;
 
@@ -131,59 +85,74 @@ document.getElementById("submitOrder").addEventListener("click", () => {
     return;
   }
 
-  const data = getStock();
-  const stock = data[neighborhood];
   const selected = [];
-
   document.querySelectorAll("#products input").forEach(input => {
     const qty = Number(input.value) || 0;
-    if (qty > 0) selected.push({ id: input.dataset.id, qty });
+    if (qty > 0) {
+      selected.push({
+        id: Number(input.dataset.id),
+        nombre: input.dataset.name,
+        stock: Number(input.dataset.stock),
+        cantidad: qty
+      });
+    }
   });
 
   if (!selected.length) {
-    showResult("<strong>No seleccionaste productos.</strong><br>Usa el botón (+) para elegir cantidades.", false);
+    showResult("<strong>No seleccionaste productos.</strong><br>Elige al menos un producto.", false);
     return;
   }
 
-  for (const item of selected) {
-    if (item.qty > stock[item.id]) {
-      const product = PRODUCTS_DATA.find(p => p[0] === item.id);
-      showResult(`<strong>Stock insuficiente.</strong><br>${product[1]} solo tiene ${stock[item.id]} disponibles.`, false);
-      return;
+  // 1. Guardar la solicitud en Supabase
+  const { error: reqError } = await supabaseClient.from("solicitudes").insert([
+    {
+      jugador: name,
+      vecindario: neighborhood,
+      items: selected.map(i => ({ nombre: i.nombre, cantidad: i.cantidad }))
     }
+  ]);
+
+  if (reqError) {
+    showResult(`<strong>Error al procesar pedido:</strong> ${reqError.message}`, false);
+    return;
   }
 
+  // 2. Descontar inventario en Supabase
   for (const item of selected) {
-    stock[item.id] -= item.qty;
+    const nuevoStock = item.stock - item.cantidad;
+    await supabaseClient
+      .from("productos")
+      .update({ stock: nuevoStock })
+      .eq("id", item.id);
   }
-  saveStock(data);
 
+  // 3. Generar mensaje de WhatsApp
   let waMessage = `🚜 *SOLICITUD HAYDAY*\n`;
   waMessage += `👤 *Jugador:* ${name}\n`;
   waMessage += `🏡 *Vecindario:* ${neighborhood}\n\n`;
   waMessage += `📦 *Materiales solicitados:*\n`;
 
   const lines = selected.map(item => {
-    const product = PRODUCTS_DATA.find(p => p[0] === item.id);
-    waMessage += `• ${product[1]}: ${item.qty}\n`;
-    return `<li>${product[1]} × <strong>${item.qty}</strong></li>`;
+    waMessage += `• ${item.nombre}: ${item.cantidad}\n`;
+    return `<li>${item.nombre} × <strong>${item.cantidad}</strong></li>`;
   }).join("");
 
   showResult(`
-    <h3>✅ Solicitud registrada</h3>
+    <h3>✅ Solicitud registrada en la base de datos</h3>
     <p><strong>${name}</strong> — Vecindario: <strong>${neighborhood}</strong></p>
     <ul>${lines}</ul>
     <p>Abriendo WhatsApp para confirmar...</p>
   `, true);
 
+  // Recargar catálogo actualizado
   renderProducts();
 
-  const waUrl = `https://wa.me/${CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
+  // Redirigir a WhatsApp
+  const waUrl = `https://wa.me/${APP_CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
   setTimeout(() => {
     window.open(waUrl, "_blank");
   }, 800);
 });
 
-// Ejecutar al cargar la página
+// Carga inicial
 window.addEventListener("DOMContentLoaded", renderProducts);
-renderProducts();
