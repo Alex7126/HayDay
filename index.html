@@ -3,52 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hay Day Shop</title>
+  <title>HayDay - Tienda Comunitaria</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <header class="hero">
-    <div>
-      <p class="eyebrow">TIENDA COMUNITARIA</p>
-      <h1>🌾 Hay Day Shop</h1>
-      <p>Stock reservado para tu vecindario</p>
-    </div>
-  </header>
+  <div class="container">
+    <header>
+      <h1>🌾 Almacén HayDay 🚜</h1>
+      <p>Solicita los materiales y productos para tu granja</p>
+    </header>
 
-  <main class="container">
-    <section class="card">
-      <label for="neighborhood">🏘️ Vecindario</label>
-      <select id="neighborhood">
-        <option value="1">Vecindario 1</option>
-        <option value="2">Vecindario 2</option>
-      </select>
-
-      <label for="playerName">👤 Tu nombre</label>
-      <input id="playerName" type="text" maxlength="30" placeholder="Escribe tu nombre">
-    </section>
-
-    <section class="card">
-      <div class="section-title">
-        <div>
-          <h2>📦 Productos</h2>
-          <p>Selecciona lo que necesitas.</p>
-        </div>
-        <div class="stock-badge" id="totalStock">1500 / 1500</div>
+    <section class="controls-panel">
+      <div class="form-group">
+        <label for="player-name">Tu nombre en el juego:</label>
+        <input type="text" id="player-name" placeholder="Ej. Alex Granja" required>
       </div>
-      <div id="products"></div>
+
+      <div class="form-group">
+        <label for="neighborhood-select">Tu Vecindario:</label>
+        <select id="neighborhood-select">
+          <option value="Crueles">Crueles</option>
+          <option value="Dráculas">Dráculas</option>
+        </select>
+      </div>
     </section>
 
-    <button class="primary" id="submitOrder">🛒 Solicitar productos</button>
+    <main>
+      <h2>Productos Disponibles</h2>
+      <br>
+      <div id="product-grid" class="product-grid">
+        <!-- Se llena automáticamente con app.js -->
+      </div>
 
-    <section class="card result hidden" id="result"></section>
+      <section class="order-summary">
+        <h2>📋 Tu Solicitud</h2>
+        <ul id="order-list" class="order-list">
+          <li>No has agregado productos todavía.</li>
+        </ul>
+        <button id="btn-submit" class="btn-whatsapp">📲 Enviar Pedido por WhatsApp</button>
+      </section>
+    </main>
+  </div>
 
-    <section class="card small">
-      <h3>ℹ️ Cómo funciona</h3>
-      <p>Elige tu vecindario, escribe tu nombre y selecciona las cantidades. En esta primera versión los datos se guardan en el navegador para probar el funcionamiento.</p>
-      <p class="warning">⚠️ Para que los dos vecindarios compartan el mismo stock desde sus celulares, el siguiente paso será conectar esta página a una base de datos como Supabase.</p>
-    </section>
-  </main>
-
-  <script src="script.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
