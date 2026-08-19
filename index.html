@@ -10,7 +10,6 @@
 <body>
   <div class="container">
     <header>
-      <!-- Logo superior usando tu nueva imagen logo2.png -->
       <img src="logo2.png" alt="Logo Vecindarios" class="main-logo">
       <p>🌾 Almacén Comunitario: Crueles & Dráculas 🚜</p>
     </header>
@@ -53,10 +52,29 @@
     </main>
   </div>
 
-  <!-- Gallinita viajera -->
-  <div id="roaming-chicken" class="roaming-chicken" style="top: 20%; left: 80%;">
+  <!-- Gallinita tierna en SVG (100% transparente sin fondo blanco) -->
+  <div id="roaming-chicken" class="roaming-chicken" style="top: 20%; left: 75%;">
     <div class="chicken-bubble" id="chicken-bubble">👀 ¡Pío!</div>
-    <img src="gallina.png" alt="Gallina" class="chicken-avatar" id="chicken-img">
+    <div class="chicken-avatar" id="chicken-img">
+      <svg viewBox="0 0 100 100" width="100%" height="100%">
+        <!-- Sombras y cuerpo suave -->
+        <ellipse cx="50" cy="60" rx="36" ry="32" fill="#FFFFFF" stroke="#E2D9C8" stroke-width="2"/>
+        <path d="M 42 28 C 42 16, 50 16, 50 28 C 50 14, 58 14, 58 28" fill="#E74C3C"/>
+        <!-- Mejillas sonrojadas -->
+        <circle cx="26" cy="62" r="7" fill="#FFAAA6" opacity="0.8"/>
+        <circle cx="74" cy="62" r="7" fill="#FFAAA6" opacity="0.8"/>
+        <!-- Ojos con brillo tierno -->
+        <ellipse cx="36" cy="50" rx="6" ry="8" fill="#2C3E50"/>
+        <circle cx="34" cy="47" r="2.5" fill="#FFFFFF"/>
+        <ellipse cx="64" cy="50" rx="6" ry="8" fill="#2C3E50"/>
+        <circle cx="62" cy="47" r="2.5" fill="#FFFFFF"/>
+        <!-- Pico -->
+        <polygon points="44,56 56,56 50,67" fill="#F39C12"/>
+        <!-- Patitas -->
+        <ellipse cx="38" cy="90" rx="8" ry="4" fill="#F39C12"/>
+        <ellipse cx="62" cy="90" rx="8" ry="4" fill="#F39C12"/>
+      </svg>
+    </div>
   </div>
 
   <script src="config.js"></script>
