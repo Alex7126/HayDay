@@ -37,10 +37,14 @@ header {
 }
 
 .main-logo {
-  max-width: 220px;
-  height: auto;
-  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25));
-  animation: floatLogo 3s ease-in-out infinite alternate;
+  width: 170px;                  /* Tamaño compacto */
+  height: 170px;
+  object-fit: cover;             /* Llena el círculo sin deformarse */
+  border-radius: 50%;            /* Corta las esquinas negras en un círculo perfecto */
+  border: 4px solid #ffffff;     /* Borde blanco limpio tipo insignia */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  animation: logoBreath 4s ease-in-out infinite alternate;
+  display: inline-block;
 }
 
 @keyframes floatLogo {
