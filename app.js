@@ -3,9 +3,9 @@
 const NEIGHBORHOOD_MAX_LIMIT = 1500;
 let remainingQuota = 0;
 let isLoaded = false;
-let chickenInterval = null;
+let chickenMovementTimer = null;
 
-// 1. Obtener cupo consumido
+// 1. Consultar cupo consumido
 async function getNeighborhoodUsedQuota(neighborhood) {
   try {
     const { data, error } = await supabaseClient
@@ -120,45 +120,59 @@ async function renderProducts() {
 
   isLoaded = true;
   updateOrderCounter();
-  initPeekingChicken();
+  initRoamingChicken();
 }
 
-// 3. Animación periódica de la Gallinita Espía
-function initPeekingChicken() {
-  if (chickenInterval) clearInterval(chickenInterval);
+// 3. IA de movimiento libre por toda la página para la Gallina
+function initRoamingChicken() {
+  if (chickenMovementTimer) clearInterval(chickenMovementTimer);
 
-  const chicken = document.getElementById("peeking-chicken");
-  const bubble = chicken ? chicken.querySelector(".chicken-bubble") : null;
-  const phrases = ["👀 ¡Pío!", "🕵️ ¡Te estoy viendo!", "🌾 ¿Comprando mucho?", "✨ ¡Cluck!"];
+  const chicken = document.getElementById("roaming-chicken");
+  const bubble = document.getElementById("chicken-bubble");
+  const chickenImg = document.getElementById("chicken-img");
+  if (!chicken) return;
 
-  function showChicken() {
-    const rows = document.querySelectorAll(".product");
-    if (!rows.length || !chicken) return;
+  const phrases = [
+    "👀 ¡Te estoy vigilando!",
+    "🌽 ¿Mucho maíz hoy?",
+    "🌾 ¡Pío pío!",
+    "🚜 ¡A cuidar la granja!",
+    "⭐ ¡No te pases del cupo!",
+    "🥚 ¡Cluck!"
+  ];
 
-    // Seleccionar un producto al azar
-    const randomRow = rows[Math.floor(Math.random() * rows.length)];
+  let currentX = 80;
+
+  function moveChicken() {
+    // Generar nueva posición aleatoria en pantalla (porcentajes)
+    const newTop = Math.floor(Math.random() * 70) + 10; // Entre 10% y 80% vertical
+    const newLeft = Math.floor(Math.random() * 80) + 5;  // Entre 5% y 85% horizontal
+
+    // Voltear la imagen según hacia dónde camine
+    if (newLeft > currentX) {
+      chickenImg.style.transform = "scaleX(-1)"; // Mira a la derecha
+    } else {
+      chickenImg.style.transform = "scaleX(1)";  // Mira a la izquierda
+    }
+    currentX = newLeft;
+
+    // Cambiar frase
     if (bubble) bubble.textContent = phrases[Math.floor(Math.random() * phrases.length)];
 
-    // Mover la gallina dentro de esa fila
-    chicken.className = "peeking-chicken hidden";
-    randomRow.style.position = "relative";
-    randomRow.appendChild(chicken);
-
-    const isTop = Math.random() > 0.4;
-    chicken.style.top = isTop ? "-15px" : "10px";
-    chicken.style.right = isTop ? "30px" : "-20px";
-
-    chicken.classList.remove("hidden");
-    chicken.classList.add(isTop ? "peek-top" : "peek-right");
-
-    setTimeout(() => {
-      chicken.classList.add("hidden");
-    }, 4200);
+    // Mover con animación suave
+    chicken.style.top = `${newTop}%`;
+    chicken.style.left = `${newLeft}%`;
   }
 
-  // Aparece a los 2 segundos y luego cada 7 segundos
-  setTimeout(showChicken, 2000);
-  chickenInterval = setInterval(showChicken, 7500);
+  // Se mueve de lugar cada 5.5 segundos
+  chickenMovementTimer = setInterval(moveChicken, 5500);
+
+  // Al hacerle clic saluda
+  chicken.onclick = () => {
+    if (bubble) bubble.textContent = "❤️ ¡Coo-coo! 🌾";
+    chicken.style.transform = "scale(1.2)";
+    setTimeout(() => { chicken.style.transform = "scale(1)"; }, 300);
+  };
 }
 
 function getSelectedItemsCount() {
