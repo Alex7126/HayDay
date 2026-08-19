@@ -3,8 +3,9 @@
 const NEIGHBORHOOD_MAX_LIMIT = 1500;
 let remainingQuota = 0;
 let isLoaded = false;
+let chickenInterval = null;
 
-// 1. Obtener cupo consumido directamente de Supabase
+// 1. Obtener cupo consumido
 async function getNeighborhoodUsedQuota(neighborhood) {
   try {
     const { data, error } = await supabaseClient
@@ -12,32 +13,25 @@ async function getNeighborhoodUsedQuota(neighborhood) {
       .select("items")
       .eq("vecindario", neighborhood);
 
-    if (error || !data) {
-      console.error("Error al consultar cupo:", error);
-      return 0;
-    }
+    if (error || !data) return 0;
 
-    let totalItemsOrdered = 0;
+    let total = 0;
     data.forEach(solicitud => {
       let items = solicitud.items;
       if (typeof items === "string") {
         try { items = JSON.parse(items); } catch(e) { items = []; }
       }
       if (Array.isArray(items)) {
-        items.forEach(item => {
-          totalItemsOrdered += Number(item.cantidad) || 0;
-        });
+        items.forEach(i => { total += Number(i.cantidad) || 0; });
       }
     });
-
-    return totalItemsOrdered;
+    return total;
   } catch (err) {
-    console.error("Error inesperado en cupo:", err);
     return 0;
   }
 }
 
-// 2. Renderizar catálogo y actualizar indicadores
+// 2. Renderizar catálogo
 async function renderProducts() {
   isLoaded = false;
   const neighborhood = document.getElementById("neighborhood").value;
@@ -45,10 +39,9 @@ async function renderProducts() {
   const limitBadge = document.getElementById("neighborhoodLimitBadge");
   const submitBtn = document.getElementById("submitOrder");
 
-  container.innerHTML = "<p style='text-align:center; padding:20px;'>Cargando inventario...</p>";
+  container.innerHTML = "<p style='text-align:center; padding:15px; color:#fff;'>Cargando productos...</p>";
   limitBadge.textContent = "Calculando cupo...";
 
-  // 2.1 Calcular cupo restante
   const usedQuota = await getNeighborhoodUsedQuota(neighborhood);
   remainingQuota = Math.max(0, NEIGHBORHOOD_MAX_LIMIT - usedQuota);
 
@@ -58,7 +51,7 @@ async function renderProducts() {
     limitBadge.style.color = "#d32f2f";
     submitBtn.disabled = true;
     submitBtn.style.background = "#9e9e9e";
-    submitBtn.textContent = "🚫 Límite de 1,500 alcanzado para este vecindario";
+    submitBtn.textContent = "🚫 Cupo agotado para este vecindario";
   } else {
     limitBadge.style.color = "#2e7d32";
     submitBtn.disabled = false;
@@ -66,7 +59,6 @@ async function renderProducts() {
     submitBtn.textContent = "📲 Solicitar y Enviar por WhatsApp";
   }
 
-  // 2.2 Obtener catálogo de Supabase
   const { data: products, error } = await supabaseClient
     .from("productos")
     .select("*")
@@ -74,7 +66,7 @@ async function renderProducts() {
     .order("nombre", { ascending: true });
 
   if (error || !products || products.length === 0) {
-    container.innerHTML = "<p>No hay productos disponibles para este vecindario.</p>";
+    container.innerHTML = "<p style='color:white; text-align:center;'>No hay productos registrados.</p>";
     return;
   }
 
@@ -89,32 +81,28 @@ async function renderProducts() {
         <div class="product-stock">${prod.stock} disponibles</div>
       </div>
       <div class="qty">
-        <button type="button" class="btn-qty" data-action="minus">−</button>
+        <button type="button" data-action="minus">−</button>
         <input type="number" min="0" max="${prod.stock}" value="0" data-id="${prod.id}" data-name="${prod.nombre}" data-stock="${prod.stock}">
-        <button type="button" class="btn-qty" data-action="plus">+</button>
+        <button type="button" data-action="plus">+</button>
       </div>
     `;
 
     const input = row.querySelector("input");
-    const btnMinus = row.querySelector('[data-action="minus"]');
-    const btnPlus = row.querySelector('[data-action="plus"]');
-
-    btnMinus.onclick = () => {
+    row.querySelector('[data-action="minus"]').onclick = () => {
       input.value = Math.max(0, Number(input.value) - 1);
       updateOrderCounter();
     };
 
-    btnPlus.onclick = () => {
+    row.querySelector('[data-action="plus"]').onclick = () => {
       const currentOrderTotal = getSelectedItemsCount();
       const currentVal = Number(input.value) || 0;
-      
-      // Bloquear si supera el stock del producto o el cupo del vecindario
+
       if (currentVal + 1 > prod.stock) {
-        alert(`Solo hay ${prod.stock} disponibles de este producto.`);
+        alert(`Solo hay ${prod.stock} disponibles.`);
         return;
       }
       if (currentOrderTotal + 1 > remainingQuota) {
-        alert(`¡No puedes pedir más! El cupo restante para ${neighborhood} es de ${remainingQuota} productos.`);
+        alert(`¡No puedes exceder el cupo de ${remainingQuota} unidades de tu vecindario!`);
         return;
       }
 
@@ -122,15 +110,8 @@ async function renderProducts() {
       updateOrderCounter();
     };
 
-    input.addEventListener("change", () => {
-      let val = Math.max(0, Math.min(prod.stock, Number(input.value) || 0));
-      const currentOrderTotalWithoutThis = getSelectedItemsCount() - (Number(input.value) || 0);
-      
-      if (currentOrderTotalWithoutThis + val > remainingQuota) {
-        val = Math.max(0, remainingQuota - currentOrderTotalWithoutThis);
-        alert(`Ajustado al máximo permitido. Solo quedan ${remainingQuota} en el cupo.`);
-      }
-      input.value = val;
+    input.addEventListener("input", () => {
+      input.value = Math.max(0, Math.min(prod.stock, Number(input.value) || 0));
       updateOrderCounter();
     });
 
@@ -139,9 +120,47 @@ async function renderProducts() {
 
   isLoaded = true;
   updateOrderCounter();
+  initPeekingChicken();
 }
 
-// 3. Contar productos seleccionados
+// 3. Animación periódica de la Gallinita Espía
+function initPeekingChicken() {
+  if (chickenInterval) clearInterval(chickenInterval);
+
+  const chicken = document.getElementById("peeking-chicken");
+  const bubble = chicken ? chicken.querySelector(".chicken-bubble") : null;
+  const phrases = ["👀 ¡Pío!", "🕵️ ¡Te estoy viendo!", "🌾 ¿Comprando mucho?", "✨ ¡Cluck!"];
+
+  function showChicken() {
+    const rows = document.querySelectorAll(".product");
+    if (!rows.length || !chicken) return;
+
+    // Seleccionar un producto al azar
+    const randomRow = rows[Math.floor(Math.random() * rows.length)];
+    if (bubble) bubble.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+
+    // Mover la gallina dentro de esa fila
+    chicken.className = "peeking-chicken hidden";
+    randomRow.style.position = "relative";
+    randomRow.appendChild(chicken);
+
+    const isTop = Math.random() > 0.4;
+    chicken.style.top = isTop ? "-15px" : "10px";
+    chicken.style.right = isTop ? "30px" : "-20px";
+
+    chicken.classList.remove("hidden");
+    chicken.classList.add(isTop ? "peek-top" : "peek-right");
+
+    setTimeout(() => {
+      chicken.classList.add("hidden");
+    }, 4200);
+  }
+
+  // Aparece a los 2 segundos y luego cada 7 segundos
+  setTimeout(showChicken, 2000);
+  chickenInterval = setInterval(showChicken, 7500);
+}
+
 function getSelectedItemsCount() {
   let count = 0;
   document.querySelectorAll("#products input").forEach(input => {
@@ -155,11 +174,7 @@ function updateOrderCounter() {
   const counterEl = document.getElementById("currentOrderCount");
   if (counterEl) {
     counterEl.textContent = `${currentCount} productos seleccionados`;
-    if (currentCount > remainingQuota) {
-      counterEl.style.color = "#d32f2f";
-    } else {
-      counterEl.style.color = "#2c3e50";
-    }
+    counterEl.style.color = currentCount > remainingQuota ? "#d32f2f" : "#8d5b2d";
   }
 }
 
@@ -177,7 +192,7 @@ document.getElementById("neighborhood").addEventListener("change", () => {
   renderProducts();
 });
 
-// 4. Validación final y envío
+// 4. Enviar Solicitud
 document.getElementById("submitOrder").addEventListener("click", async () => {
   if (!isLoaded) return;
 
@@ -187,18 +202,17 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   const orderCount = getSelectedItemsCount();
 
   if (!name) {
-    showResult("<strong>Falta tu nombre.</strong><br>Por favor escribe tu nombre en el juego.", false);
+    showResult("<strong>Falta tu nombre.</strong><br>Ingresa tu nombre antes de enviar.", false);
     return;
   }
 
   if (orderCount === 0) {
-    showResult("<strong>Carrito vacío.</strong><br>Selecciona al menos un producto.", false);
+    showResult("<strong>Carrito vacío.</strong><br>Selecciona algún producto con el botón (+).", false);
     return;
   }
 
-  // Verificación estricta del límite antes de procesar
   if (orderCount > remainingQuota) {
-    showResult(`<strong>Superas el cupo máximo.</strong><br>Solo quedan <strong>${remainingQuota}</strong> productos disponibles para ${neighborhood}. Intentas pedir ${orderCount}.`, false);
+    showResult(`<strong>Superas el cupo disponible.</strong><br>Solo restan ${remainingQuota} productos para ${neighborhood}.`, false);
     return;
   }
 
@@ -218,7 +232,6 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
     }
   });
 
-  // Guardar en la base de datos
   const { error: reqError } = await supabaseClient.from("solicitudes").insert([
     {
       jugador: name,
@@ -228,23 +241,21 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   ]);
 
   if (reqError) {
-    showResult(`<strong>Error al guardar la solicitud:</strong> ${reqError.message}`, false);
+    showResult(`<strong>Error al guardar:</strong> ${reqError.message}`, false);
     submitBtn.disabled = false;
     submitBtn.textContent = "📲 Solicitar y Enviar por WhatsApp";
     return;
   }
 
-  // Descontar inventario individual
   for (const item of selected) {
     const nuevoStock = Math.max(0, item.stock - item.cantidad);
     await supabaseClient.from("productos").update({ stock: nuevoStock }).eq("id", item.id);
   }
 
-  // Crear mensaje de WhatsApp
   let waMessage = `🚜 *SOLICITUD HAYDAY*\n`;
   waMessage += `👤 *Jugador:* ${name}\n`;
   waMessage += `🏡 *Vecindario:* ${neighborhood}\n\n`;
-  waMessage += `📦 *Pedido (Total: ${orderCount} items):*\n`;
+  waMessage += `📦 *Pedido (Total: ${orderCount}):*\n`;
 
   const lines = selected.map(item => {
     waMessage += `• ${item.nombre}: ${item.cantidad}\n`;
@@ -252,13 +263,12 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   }).join("");
 
   showResult(`
-    <h3>✅ Solicitud Guardada</h3>
+    <h3>✅ Solicitud registrada con éxito</h3>
     <p><strong>${name}</strong> — ${neighborhood}</p>
     <ul>${lines}</ul>
-    <p>Redirigiendo a WhatsApp...</p>
+    <p>Abriendo WhatsApp...</p>
   `, true);
 
-  // Recargar cupos actualizados
   await renderProducts();
 
   const waUrl = `https://wa.me/${APP_CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
