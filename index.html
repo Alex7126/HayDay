@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hay Day Shop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">TIENDA COMUNITARIA</p>
+      <h1>🌾 Hay Day Shop</h1>
+      <p>Stock reservado para tu vecindario</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <label for="neighborhood">🏘️ Vecindario</label>
+      <select id="neighborhood">
+        <option value="1">Vecindario 1</option>
+        <option value="2">Vecindario 2</option>
+      </select>
+
+      <label for="playerName">👤 Tu nombre</label>
+      <input id="playerName" type="text" maxlength="30" placeholder="Escribe tu nombre">
+    </section>
+
+    <section class="card">
+      <div class="section-title">
+        <div>
+          <h2>📦 Productos</h2>
+          <p>Selecciona lo que necesitas.</p>
+        </div>
+        <div class="stock-badge" id="totalStock">1500 / 1500</div>
+      </div>
+      <div id="products"></div>
+    </section>
+
+    <button class="primary" id="submitOrder">🛒 Solicitar productos</button>
+
+    <section class="card result hidden" id="result"></section>
+
+    <section class="card small">
+      <h3>ℹ️ Cómo funciona</h3>
+      <p>Elige tu vecindario, escribe tu nombre y selecciona las cantidades. En esta primera versión los datos se guardan en el navegador para probar el funcionamiento.</p>
+      <p class="warning">⚠️ Para que los dos vecindarios compartan el mismo stock desde sus celulares, el siguiente paso será conectar esta página a una base de datos como Supabase.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
