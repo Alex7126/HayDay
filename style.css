@@ -1,47 +1,70 @@
 /* style.css */
 :root {
   --primary: #4caf50;
-  --primary-dark: #388e3c;
-  --bg: #f3f6f4;
-  --card-bg: #ffffff;
-  --text: #2c3e50;
-  --border: #e2e8f0;
+  --primary-dark: #2e7d32;
+  --farm-wood: #8d5b2d;
+  --farm-yellow: #fbc02d;
+  --bg: #e8f5e9;
+  --card-bg: rgba(255, 255, 255, 0.96);
+  --text: #2d3436;
+  --border: #c8d6e5;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 body {
-  background-color: var(--bg);
+  background: #c8e6c9 url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+  background-size: cover;
   color: var(--text);
-  padding: 16px;
+  padding: 20px 15px;
+  min-height: 100vh;
 }
 
 .container {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
+/* Encabezado con Logo */
 header {
   text-align: center;
   margin-bottom: 20px;
 }
 
-header h1 {
-  color: var(--primary-dark);
-  font-size: 1.8rem;
+.main-logo {
+  max-width: 220px;
+  height: auto;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25));
+  animation: floatLogo 3s ease-in-out infinite alternate;
 }
 
+@keyframes floatLogo {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-6px) rotate(1deg); }
+}
+
+header p {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+  font-size: 1.1rem;
+  margin-top: 5px;
+}
+
+/* Tarjetas y Paneles */
 .card {
   background: var(--card-bg);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+  border: 2px solid #a5d6a7;
+  backdrop-filter: blur(4px);
 }
 
 .controls-panel {
@@ -57,27 +80,35 @@ header h1 {
 }
 
 label {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--farm-wood);
 }
 
 input, select {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  padding: 11px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
   font-size: 1rem;
+  outline: none;
+  background: #ffffff;
+  transition: 0.2s;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
 }
 
 .stock-badge {
-  display: flex;
-  justify-content: space-between;
-  background: #e8f5e9;
+  background: #f1f8e9;
+  border: 1px solid #c5e1a5;
   color: var(--primary-dark);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 10px 14px;
+  border-radius: 10px;
 }
 
+/* Lista de Productos */
 .product-list {
   display: flex;
   flex-direction: column;
@@ -88,20 +119,21 @@ input, select {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--card-bg);
+  background: #ffffff;
   padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  border-radius: 12px;
+  border: 1px solid #dfe6e9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
 .product-name {
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
 }
 
 .product-stock {
-  font-size: 0.8rem;
-  color: #718096;
+  font-size: 0.85rem;
+  color: #636e72;
 }
 
 .qty {
@@ -111,61 +143,119 @@ input, select {
 }
 
 .qty button {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: #edf2f7;
+  border: none;
+  background: #ffeaa7;
+  color: #d35400;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: 0.1s transform;
+}
+
+.qty button:active {
+  transform: scale(0.92);
 }
 
 .qty input {
-  width: 55px;
+  width: 60px;
   text-align: center;
   padding: 6px;
+  font-weight: bold;
 }
 
+/* Botón WhatsApp */
 .action-footer {
   margin-top: 20px;
 }
 
 .btn-whatsapp {
   width: 100%;
-  padding: 14px;
+  padding: 15px;
   background-color: #25d366;
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 1.05rem;
-  font-weight: bold;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(37,211,102,0.2);
+  box-shadow: 0 6px 12px rgba(37,211,102,0.3);
+  transition: 0.2s transform, 0.2s background-color;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-whatsapp:hover {
   background-color: #1ebc59;
+  transform: translateY(-2px);
 }
 
+.btn-whatsapp:disabled {
+  background-color: #b2bec3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Gallina tierna animada flotante */
+.mascot-chicken-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.speech-bubble {
+  background: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--farm-wood);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  margin-bottom: 5px;
+  border: 1px solid #ffeaa7;
+  animation: bounceBubble 2s infinite;
+}
+
+.animated-chicken {
+  width: 75px;
+  height: auto;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25));
+  animation: chickenWiggle 2.5s ease-in-out infinite;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+@keyframes chickenWiggle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-4deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-4px) rotate(4deg); }
+}
+
+@keyframes bounceBubble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Resultados */
 .result {
   margin-top: 15px;
 }
-
 .result.success {
-  border-left: 5px solid #25d366;
+  border-left: 6px solid #25d366;
   background: #f0fdf4;
 }
-
 .result.error {
-  border-left: 5px solid #ef4444;
+  border-left: 6px solid #ef4444;
   background: #fef2f2;
 }
-
-.result ul {
-  margin: 10px 0 10px 20px;
-}
-
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
