@@ -10,39 +10,39 @@
 <body>
   <div class="container">
     <header>
-      <h1>🌾 Almacén HayDay 🚜</h1>
-      <p>Pide materiales para tu vecindario</p>
+      <!-- Logo Oficial de Hay Day -->
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Hay_Day_logo.png" alt="Hay Day Logo" class="main-logo">
+      <p>🚜 Almacén Comunitario: Crueles & Dráculas 🌾</p>
     </header>
 
     <section class="card controls-panel">
       <div class="form-group">
-        <label for="playerName">Tu nombre en el juego:</label>
+        <label for="playerName">🧑‍🌾 Tu nombre de granjero:</label>
         <input type="text" id="playerName" placeholder="Ej. Alex" required>
       </div>
 
       <div class="form-group">
-        <label for="neighborhood">Vecindario:</label>
+        <label for="neighborhood">🏡 Selecciona tu Vecindario:</label>
         <select id="neighborhood">
           <option value="Crueles">Crueles</option>
           <option value="Dráculas">Dráculas</option>
         </select>
       </div>
 
-      <!-- Indicadores de cupo disponible -->
       <div class="stock-badge" style="display:flex; flex-direction:column; gap:4px;">
-        <div>Cupo restante del vecindario: <strong id="neighborhoodLimitBadge">Cargando...</strong></div>
-        <small style="color:#555;">(Límite máximo: 1,500 productos por vecindario)</small>
+        <div>🌾 Cupo disponible del vecindario: <strong id="neighborhoodLimitBadge">Cargando...</strong></div>
+        <small style="color:#555;">(Límite: 1,500 productos en total por vecindario)</small>
       </div>
 
-      <div class="stock-badge" style="background:#eef2f7; color:#2c3e50;">
-        <span>Ítems en este pedido:</span>
+      <div class="stock-badge" style="background:#fff9db; color:#8d5b2d; border-color:#ffe066;">
+        <span>📦 Productos en tu carrito:</span>
         <strong id="currentOrderCount">0 productos</strong>
       </div>
     </section>
 
     <main>
       <div id="products" class="product-list">
-        <p>Cargando productos desde la base de datos...</p>
+        <p style="text-align:center; padding:15px; color:#fff; font-weight:bold;">Cargando inventario desde la granja...</p>
       </div>
 
       <div class="action-footer">
@@ -51,6 +51,17 @@
 
       <div id="result" class="card result hidden"></div>
     </main>
+  </div>
+
+  <!-- Gallina animada flotante -->
+  <div class="mascot-chicken-container">
+    <div class="speech-bubble" id="chicken-bubble">¡Cluck! 🥚</div>
+    <img 
+      src="https://static.wikia.nocookie.net/hayday/images/7/70/Chicken.png" 
+      alt="Gallina Hay Day" 
+      class="animated-chicken"
+      onclick="document.getElementById('chicken-bubble').textContent = '¡A cosechar! 🌾'"
+    >
   </div>
 
   <script src="config.js"></script>
