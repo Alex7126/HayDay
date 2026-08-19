@@ -1,146 +1,155 @@
 // app.js
-let cart = {};
-let availableProducts = [];
 
-async function loadProducts() {
-  const neighborhood = document.getElementById("neighborhood-select").value;
-  const grid = document.getElementById("product-grid");
-  grid.innerHTML = "<p>Cargando productos...</p>";
-
-  // Consulta a Supabase
-  const { data, error } = await supabaseClient
-    .from("productos")
-    .select("*")
-    .eq("vecindario", neighborhood);
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = "<p>No hay productos registrados para este vecindario.</p>";
-    return;
+function initialData() {
+  const data = {};
+  for (const neighborhood of CONFIG.neighborhoods) {
+    data[neighborhood] = {};
+    for (const [id, name, stock] of PRODUCTS_DATA) {
+      data[neighborhood][id] = stock; // 1,000 a cada producto
+    }
   }
+  return data;
+}
 
-  availableProducts = data;
-  renderProducts();
+function getStock() {
+  const saved = localStorage.getItem(CONFIG.storageKey);
+  if (!saved) {
+    const fresh = initialData();
+    localStorage.setItem(CONFIG.storageKey, JSON.stringify(fresh));
+    return fresh;
+  }
+  return JSON.parse(saved);
+}
+
+function saveStock(data) {
+  localStorage.setItem(CONFIG.storageKey, JSON.stringify(data));
 }
 
 function renderProducts() {
-  const grid = document.getElementById("product-grid");
-  grid.innerHTML = "";
+  const neighborhood = document.getElementById("neighborhood").value;
+  const stock = getStock()[neighborhood] || {};
+  const container = document.getElementById("products");
+  container.innerHTML = "";
 
-  availableProducts.forEach(prod => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <img src="${prod.imagen_url || 'https://via.placeholder.com/90'}" alt="${prod.nombre}">
-      <h3>${prod.nombre}</h3>
-      <p class="stock">Disponible: ${prod.stock}</p>
-      <div class="actions">
-        <input type="number" id="qty-${prod.id}" min="1" max="${prod.stock}" value="1">
-        <button onclick="addToCart(${prod.id})">Agregar</button>
+  for (const [id, name] of PRODUCTS_DATA) {
+    const available = stock[id] ?? 0;
+    const row = document.createElement("div");
+    row.className = "product";
+    row.innerHTML = `
+      <div>
+        <div class="product-name">${name}</div>
+        <div class="product-stock">${available} disponibles</div>
+      </div>
+      <div class="qty">
+        <button type="button" data-action="minus">−</button>
+        <input type="number" min="0" max="${available}" value="0" data-id="${id}">
+        <button type="button" data-action="plus">+</button>
       </div>
     `;
-    grid.appendChild(card);
-  });
+
+    const input = row.querySelector("input");
+    row.querySelector('[data-action="minus"]').onclick = () => {
+      input.value = Math.max(0, Number(input.value) - 1);
+    };
+    row.querySelector('[data-action="plus"]').onclick = () => {
+      input.value = Math.min(available, Number(input.value) + 1);
+    };
+    input.addEventListener("change", () => {
+      input.value = Math.max(0, Math.min(available, Number(input.value) || 0));
+    });
+
+    container.appendChild(row);
+  }
+  updateTotal();
 }
 
-function addToCart(productId) {
-  const prod = availableProducts.find(p => p.id === productId);
-  const qtyInput = document.getElementById(`qty-${productId}`);
-  const qty = parseInt(qtyInput.value) || 1;
-
-  if (qty > prod.stock) {
-    alert("No puedes pedir más del stock disponible.");
-    return;
-  }
-
-  cart[productId] = {
-    id: prod.id,
-    nombre: prod.nombre,
-    cantidad: qty
-  };
-
-  updateCartUI();
+function updateTotal() {
+  const neighborhood = document.getElementById("neighborhood").value;
+  const stock = getStock()[neighborhood] || {};
+  const total = Object.values(stock).reduce((a, b) => a + b, 0);
+  const max = PRODUCTS_DATA.reduce((a, p) => a + p[2], 0);
+  document.getElementById("totalStock").textContent = `${total} / ${max}`;
 }
 
-function updateCartUI() {
-  const list = document.getElementById("order-list");
-  list.innerHTML = "";
-
-  const items = Object.values(cart);
-  if (items.length === 0) {
-    list.innerHTML = "<li>No has agregado productos todavía.</li>";
-    return;
-  }
-
-  items.forEach(item => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <span>${item.nombre} x${item.cantidad}</span>
-      <button style="background:#e74c3c; padding:4px 8px; font-size:0.8rem;" onclick="removeFromCart(${item.id})">Quitar</button>
-    `;
-    list.appendChild(li);
-  });
+function showResult(html, ok = true) {
+  const box = document.getElementById("result");
+  box.className = `card result ${ok ? "success" : "error"}`;
+  box.innerHTML = html;
+  box.classList.remove("hidden");
+  window.scrollTo({ top: box.offsetTop - 20, behavior: "smooth" });
 }
 
-function removeFromCart(productId) {
-  delete cart[productId];
-  updateCartUI();
-}
-
-async function sendOrder() {
-  const playerName = document.getElementById("player-name").value.trim();
-  const neighborhood = document.getElementById("neighborhood-select").value;
-  const items = Object.values(cart);
-
-  if (!playerName) {
-    alert("Por favor ingresa tu nombre de jugador.");
-    return;
-  }
-
-  if (items.length === 0) {
-    alert("Tu lista de pedido está vacía.");
-    return;
-  }
-
-  // 1. Guardar en Supabase
-  const { error } = await supabaseClient.from("solicitudes").insert([
-    {
-      jugador: playerName,
-      vecindario: neighborhood,
-      items: items,
-      estado: "pendiente",
-      created_at: new Date()
-    }
-  ]);
-
-  if (error) {
-    console.error("Error al registrar solicitud en Supabase:", error);
-  }
-
-  // 2. Armar mensaje para WhatsApp
-  let msg = `🚜 *NUEVA SOLICITUD HAYDAY*\n`;
-  msg += `👤 *Jugador:* ${playerName}\n`;
-  msg += `🏡 *Vecindario:* ${neighborhood}\n\n`;
-  msg += `📦 *Pedido:*\n`;
-  items.forEach(i => {
-    msg += `• ${i.nombre}: ${i.cantidad}\n`;
-  });
-
-  const waUrl = `https://wa.me/${APP_CONFIG.adminWhatsApp}?text=${encodeURIComponent(msg)}`;
-  window.open(waUrl, "_blank");
-
-  // Limpiar carrito
-  cart = {};
-  updateCartUI();
-  alert("¡Pedido preparado! Te redirigiremos a WhatsApp para confirmarlo.");
-}
-
-document.getElementById("neighborhood-select").addEventListener("change", () => {
-  cart = {};
-  updateCartUI();
-  loadProducts();
+document.getElementById("neighborhood").addEventListener("change", () => {
+  const box = document.getElementById("result");
+  box.classList.add("hidden");
+  renderProducts();
 });
 
-document.getElementById("btn-submit").addEventListener("click", sendOrder);
+document.getElementById("submitOrder").addEventListener("click", () => {
+  const name = document.getElementById("playerName").value.trim();
+  const neighborhood = document.getElementById("neighborhood").value;
 
-// Carga inicial
-window.addEventListener("DOMContentLoaded", loadProducts);
+  if (!name) {
+    showResult("<strong>Falta tu nombre.</strong><br>Escribe tu nombre antes de solicitar productos.", false);
+    return;
+  }
+
+  const data = getStock();
+  const stock = data[neighborhood];
+  const selected = [];
+
+  document.querySelectorAll("#products input").forEach(input => {
+    const qty = Number(input.value) || 0;
+    if (qty > 0) selected.push({ id: input.dataset.id, qty });
+  });
+
+  if (!selected.length) {
+    showResult("<strong>No seleccionaste productos.</strong><br>Elige al menos un producto con el selector (+) antes de enviar.", false);
+    return;
+  }
+
+  // Validación de existencias
+  for (const item of selected) {
+    if (item.qty > stock[item.id]) {
+      const product = PRODUCTS_DATA.find(p => p[0] === item.id);
+      showResult(`<strong>Stock insuficiente.</strong><br>${product[1]} solo tiene ${stock[item.id]} disponibles.`, false);
+      return;
+    }
+  }
+
+  // Descontar inventario local
+  for (const item of selected) {
+    stock[item.id] -= item.qty;
+  }
+  saveStock(data);
+
+  // Armar lista para pantalla y WhatsApp
+  let waMessage = `🚜 *SOLICITUD HAYDAY*\n`;
+  waMessage += `👤 *Jugador:* ${name}\n`;
+  waMessage += `🏡 *Vecindario:* ${neighborhood}\n\n`;
+  waMessage += `📦 *Materiales solicitados:*\n`;
+
+  const lines = selected.map(item => {
+    const product = PRODUCTS_DATA.find(p => p[0] === item.id);
+    waMessage += `• ${product[1]}: ${item.qty}\n`;
+    return `<li>${product[1]} × <strong>${item.qty}</strong></li>`;
+  }).join("");
+
+  showResult(`
+    <h3>✅ Solicitud registrada</h3>
+    <p><strong>${name}</strong> — Vecindario: <strong>${neighborhood}</strong></p>
+    <ul>${lines}</ul>
+    <p>Redirigiendo a WhatsApp para confirmar el pedido...</p>
+  `, true);
+
+  renderProducts();
+
+  // Abrir WhatsApp automáticamente
+  const waUrl = `https://wa.me/${CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
+  setTimeout(() => {
+    window.open(waUrl, "_blank");
+  }, 1000);
+});
+
+// Inicialización
+renderProducts();
