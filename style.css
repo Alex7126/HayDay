@@ -5,7 +5,7 @@
   --farm-wood: #8d5b2d;
   --farm-yellow: #fbc02d;
   --bg: #e8f5e9;
-  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: rgba(255, 255, 255, 0.96);
   --text: #2d3436;
   --border: #c8d6e5;
 }
@@ -18,27 +18,12 @@
 }
 
 body {
-  /* Tu imagen local logo.png ahora es el fondo panorámico */
-  background: #1b2838 url('logo.png') no-repeat center center fixed;
+  background: #1b2838 url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
   background-size: cover;
   color: var(--text);
   padding: 20px 15px;
   min-height: 100vh;
-  position: relative;
   overflow-x: hidden;
-}
-
-/* Capa semitransparente para que resalten los formularios */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(13, 23, 33, 0.65);
-  backdrop-filter: blur(2px);
-  z-index: 0;
 }
 
 .container {
@@ -55,16 +40,15 @@ header {
 }
 
 .main-logo {
-  max-width: 220px;
-  height: auto;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
-  animation: logoFloat 3s ease-in-out infinite alternate;
-  display: inline-block;
-}
-
-@keyframes logoFloat {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-6px) rotate(1deg); }
+  width: 170px !important;
+  height: 170px !important;
+  max-width: 170px !important;
+  max-height: 170px !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  border: 4px solid #ffffff !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+  display: inline-block !important;
 }
 
 header p {
@@ -81,7 +65,7 @@ header p {
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 18px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
   border: 2px solid #a5d6a7;
 }
 
@@ -114,7 +98,7 @@ input, select {
 
 input:focus, select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
 }
 
 .stock-badge {
@@ -140,7 +124,7 @@ input:focus, select:focus {
   padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid #dfe6e9;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .product-name {
@@ -199,8 +183,8 @@ input:focus, select:focus {
   font-size: 1.15rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.4);
-  transition: 0.2s transform, 0.2s background-color;
+  box-shadow: 0 6px 12px rgba(37, 211, 102, 0.3);
+  transition: 0.2s transform;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -217,7 +201,7 @@ input:focus, select:focus {
   box-shadow: none;
 }
 
-/* 🐔 GALLINA 3D VIAJERA Y ANIMADA */
+/* 🐣 GALLINITA VIAJERA CON TAMAÑO BLINDADO */
 .roaming-chicken {
   position: fixed;
   z-index: 9999;
@@ -226,40 +210,32 @@ input:focus, select:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: top 3s cubic-bezier(0.25, 1, 0.5, 1), left 3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s ease;
-  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.45));
+  width: 80px !important;
+  max-width: 80px !important;
+  transition: top 3s cubic-bezier(0.25, 1, 0.5, 1), left 3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .chicken-bubble {
   background: #ffffff;
-  padding: 5px 10px;
-  border-radius: 14px;
-  font-size: 0.78rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #d35400;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   border: 2px solid #ffeaa7;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   white-space: nowrap;
-  animation: bubbleBounce 1.8s infinite alternate ease-in-out;
 }
 
 .chicken-avatar {
-  width: 75px;
-  height: auto;
-  display: block;
-  animation: chickenWalk 0.6s infinite alternate ease-in-out;
-  transform-origin: bottom center;
-}
-
-@keyframes chickenWalk {
-  0% { transform: rotate(-6deg) scale(1, 0.95); }
-  100% { transform: rotate(6deg) scale(1, 1.05) translateY(-5px); }
-}
-
-@keyframes bubbleBounce {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-4px); }
+  width: 70px !important;
+  height: 70px !important;
+  max-width: 70px !important;
+  max-height: 70px !important;
+  object-fit: contain !important;
+  display: block !important;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
 }
 
 /* Resultados */
