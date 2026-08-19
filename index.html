@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌾 HayDay - Almacén Comunitario</title>
   <link rel="stylesheet" href="style.css">
-  <!-- 1. Librería de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -29,9 +28,15 @@
         </select>
       </div>
 
-      <div class="stock-badge">
-        <span>Stock disponible:</span>
-        <strong id="totalStock">Cargando...</strong>
+      <!-- Indicadores de cupo disponible -->
+      <div class="stock-badge" style="display:flex; flex-direction:column; gap:4px;">
+        <div>Cupo restante del vecindario: <strong id="neighborhoodLimitBadge">Cargando...</strong></div>
+        <small style="color:#555;">(Límite máximo: 1,500 productos por vecindario)</small>
+      </div>
+
+      <div class="stock-badge" style="background:#eef2f7; color:#2c3e50;">
+        <span>Ítems en este pedido:</span>
+        <strong id="currentOrderCount">0 productos</strong>
       </div>
     </section>
 
@@ -48,9 +53,7 @@
     </main>
   </div>
 
-  <!-- 2. Configuración y conexión -->
   <script src="config.js"></script>
-  <!-- 3. Lógica de la aplicación -->
   <script src="app.js"></script>
 </body>
 </html>
