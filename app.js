@@ -1,53 +1,64 @@
 // app.js
 
 const NEIGHBORHOOD_MAX_LIMIT = 1500;
-let remainingQuota = NEIGHBORHOOD_MAX_LIMIT;
+let remainingQuota = 0;
+let isLoaded = false;
 
-// 1. Obtener cuántos ítems ya ha pedido el vecindario
+// 1. Obtener cupo consumido directamente de Supabase
 async function getNeighborhoodUsedQuota(neighborhood) {
-  const { data, error } = await supabaseClient
-    .from("solicitudes")
-    .select("items")
-    .eq("vecindario", neighborhood);
+  try {
+    const { data, error } = await supabaseClient
+      .from("solicitudes")
+      .select("items")
+      .eq("vecindario", neighborhood);
 
-  if (error || !data) {
-    console.error("Error al calcular cuota:", error);
+    if (error || !data) {
+      console.error("Error al consultar cupo:", error);
+      return 0;
+    }
+
+    let totalItemsOrdered = 0;
+    data.forEach(solicitud => {
+      let items = solicitud.items;
+      if (typeof items === "string") {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          totalItemsOrdered += Number(item.cantidad) || 0;
+        });
+      }
+    });
+
+    return totalItemsOrdered;
+  } catch (err) {
+    console.error("Error inesperado en cupo:", err);
     return 0;
   }
-
-  let totalItemsOrdered = 0;
-  data.forEach(solicitud => {
-    if (Array.isArray(solicitud.items)) {
-      solicitud.items.forEach(item => {
-        totalItemsOrdered += Number(item.cantidad) || 0;
-      });
-    }
-  });
-
-  return totalItemsOrdered;
 }
 
-// 2. Cargar inventario y actualizar el cupo en pantalla
+// 2. Renderizar catálogo y actualizar indicadores
 async function renderProducts() {
+  isLoaded = false;
   const neighborhood = document.getElementById("neighborhood").value;
   const container = document.getElementById("products");
   const limitBadge = document.getElementById("neighborhoodLimitBadge");
   const submitBtn = document.getElementById("submitOrder");
 
-  container.innerHTML = "<p>Cargando productos...</p>";
+  container.innerHTML = "<p style='text-align:center; padding:20px;'>Cargando inventario...</p>";
   limitBadge.textContent = "Calculando cupo...";
 
-  // Consultar cuota usada
+  // 2.1 Calcular cupo restante
   const usedQuota = await getNeighborhoodUsedQuota(neighborhood);
   remainingQuota = Math.max(0, NEIGHBORHOOD_MAX_LIMIT - usedQuota);
 
-  limitBadge.innerHTML = `<strong>${remainingQuota}</strong> / ${NEIGHBORHOOD_MAX_LIMIT} restantes`;
+  limitBadge.innerHTML = `<strong>${remainingQuota}</strong> / ${NEIGHBORHOOD_MAX_LIMIT} disponibles`;
 
   if (remainingQuota <= 0) {
     limitBadge.style.color = "#d32f2f";
     submitBtn.disabled = true;
     submitBtn.style.background = "#9e9e9e";
-    submitBtn.textContent = "🚫 Límite de 1,500 productos alcanzado";
+    submitBtn.textContent = "🚫 Límite de 1,500 alcanzado para este vecindario";
   } else {
     limitBadge.style.color = "#2e7d32";
     submitBtn.disabled = false;
@@ -55,7 +66,7 @@ async function renderProducts() {
     submitBtn.textContent = "📲 Solicitar y Enviar por WhatsApp";
   }
 
-  // Consultar inventario desde Supabase
+  // 2.2 Obtener catálogo de Supabase
   const { data: products, error } = await supabaseClient
     .from("productos")
     .select("*")
@@ -63,7 +74,7 @@ async function renderProducts() {
     .order("nombre", { ascending: true });
 
   if (error || !products || products.length === 0) {
-    container.innerHTML = "<p>No hay productos disponibles en este momento.</p>";
+    container.innerHTML = "<p>No hay productos disponibles para este vecindario.</p>";
     return;
   }
 
@@ -75,36 +86,62 @@ async function renderProducts() {
     row.innerHTML = `
       <div>
         <div class="product-name">${prod.nombre}</div>
-        <div class="product-stock">${prod.stock} en inventario</div>
+        <div class="product-stock">${prod.stock} disponibles</div>
       </div>
       <div class="qty">
-        <button type="button" data-action="minus">−</button>
+        <button type="button" class="btn-qty" data-action="minus">−</button>
         <input type="number" min="0" max="${prod.stock}" value="0" data-id="${prod.id}" data-name="${prod.nombre}" data-stock="${prod.stock}">
-        <button type="button" data-action="plus">+</button>
+        <button type="button" class="btn-qty" data-action="plus">+</button>
       </div>
     `;
 
     const input = row.querySelector("input");
-    row.querySelector('[data-action="minus"]').onclick = () => {
+    const btnMinus = row.querySelector('[data-action="minus"]');
+    const btnPlus = row.querySelector('[data-action="plus"]');
+
+    btnMinus.onclick = () => {
       input.value = Math.max(0, Number(input.value) - 1);
       updateOrderCounter();
     };
-    row.querySelector('[data-action="plus"]').onclick = () => {
-      input.value = Math.min(prod.stock, Number(input.value) + 1);
+
+    btnPlus.onclick = () => {
+      const currentOrderTotal = getSelectedItemsCount();
+      const currentVal = Number(input.value) || 0;
+      
+      // Bloquear si supera el stock del producto o el cupo del vecindario
+      if (currentVal + 1 > prod.stock) {
+        alert(`Solo hay ${prod.stock} disponibles de este producto.`);
+        return;
+      }
+      if (currentOrderTotal + 1 > remainingQuota) {
+        alert(`¡No puedes pedir más! El cupo restante para ${neighborhood} es de ${remainingQuota} productos.`);
+        return;
+      }
+
+      input.value = currentVal + 1;
       updateOrderCounter();
     };
-    input.addEventListener("input", () => {
-      input.value = Math.max(0, Math.min(prod.stock, Number(input.value) || 0));
+
+    input.addEventListener("change", () => {
+      let val = Math.max(0, Math.min(prod.stock, Number(input.value) || 0));
+      const currentOrderTotalWithoutThis = getSelectedItemsCount() - (Number(input.value) || 0);
+      
+      if (currentOrderTotalWithoutThis + val > remainingQuota) {
+        val = Math.max(0, remainingQuota - currentOrderTotalWithoutThis);
+        alert(`Ajustado al máximo permitido. Solo quedan ${remainingQuota} en el cupo.`);
+      }
+      input.value = val;
       updateOrderCounter();
     });
 
     container.appendChild(row);
   });
 
+  isLoaded = true;
   updateOrderCounter();
 }
 
-// 3. Contar total de ítems seleccionados en el carrito actual
+// 3. Contar productos seleccionados
 function getSelectedItemsCount() {
   let count = 0;
   document.querySelectorAll("#products input").forEach(input => {
@@ -140,31 +177,33 @@ document.getElementById("neighborhood").addEventListener("change", () => {
   renderProducts();
 });
 
-// 4. Enviar Solicitud validando el límite
+// 4. Validación final y envío
 document.getElementById("submitOrder").addEventListener("click", async () => {
+  if (!isLoaded) return;
+
+  const submitBtn = document.getElementById("submitOrder");
   const name = document.getElementById("playerName").value.trim();
   const neighborhood = document.getElementById("neighborhood").value;
   const orderCount = getSelectedItemsCount();
 
   if (!name) {
-    showResult("<strong>Falta tu nombre.</strong><br>Escribe tu nombre de jugador antes de continuar.", false);
+    showResult("<strong>Falta tu nombre.</strong><br>Por favor escribe tu nombre en el juego.", false);
     return;
   }
 
   if (orderCount === 0) {
-    showResult("<strong>No has seleccionado ningún producto.</strong>", false);
+    showResult("<strong>Carrito vacío.</strong><br>Selecciona al menos un producto.", false);
     return;
   }
 
-  if (remainingQuota <= 0) {
-    showResult(`<strong>Límite alcanzado.</strong><br>El vecindario ${neighborhood} ya consumió su cupo total de 1,500 productos.`, false);
-    return;
-  }
-
+  // Verificación estricta del límite antes de procesar
   if (orderCount > remainingQuota) {
-    showResult(`<strong>Superas el cupo disponible.</strong><br>Solo quedan <strong>${remainingQuota}</strong> productos disponibles para ${neighborhood}. Estás intentando pedir ${orderCount}.`, false);
+    showResult(`<strong>Superas el cupo máximo.</strong><br>Solo quedan <strong>${remainingQuota}</strong> productos disponibles para ${neighborhood}. Intentas pedir ${orderCount}.`, false);
     return;
   }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Procesando...";
 
   const selected = [];
   document.querySelectorAll("#products input").forEach(input => {
@@ -179,7 +218,7 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
     }
   });
 
-  // Guardar en Supabase
+  // Guardar en la base de datos
   const { error: reqError } = await supabaseClient.from("solicitudes").insert([
     {
       jugador: name,
@@ -189,21 +228,23 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   ]);
 
   if (reqError) {
-    showResult(`<strong>Error al guardar:</strong> ${reqError.message}`, false);
+    showResult(`<strong>Error al guardar la solicitud:</strong> ${reqError.message}`, false);
+    submitBtn.disabled = false;
+    submitBtn.textContent = "📲 Solicitar y Enviar por WhatsApp";
     return;
   }
 
-  // Descontar inventario en Supabase
+  // Descontar inventario individual
   for (const item of selected) {
     const nuevoStock = Math.max(0, item.stock - item.cantidad);
     await supabaseClient.from("productos").update({ stock: nuevoStock }).eq("id", item.id);
   }
 
-  // WhatsApp
+  // Crear mensaje de WhatsApp
   let waMessage = `🚜 *SOLICITUD HAYDAY*\n`;
   waMessage += `👤 *Jugador:* ${name}\n`;
   waMessage += `🏡 *Vecindario:* ${neighborhood}\n\n`;
-  waMessage += `📦 *Materiales solicitados (Total: ${orderCount}):*\n`;
+  waMessage += `📦 *Pedido (Total: ${orderCount} items):*\n`;
 
   const lines = selected.map(item => {
     waMessage += `• ${item.nombre}: ${item.cantidad}\n`;
@@ -211,14 +252,14 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   }).join("");
 
   showResult(`
-    <h3>✅ Solicitud enviada</h3>
-    <p><strong>${name}</strong> — Vecindario: <strong>${neighborhood}</strong></p>
+    <h3>✅ Solicitud Guardada</h3>
+    <p><strong>${name}</strong> — ${neighborhood}</p>
     <ul>${lines}</ul>
     <p>Redirigiendo a WhatsApp...</p>
   `, true);
 
   // Recargar cupos actualizados
-  renderProducts();
+  await renderProducts();
 
   const waUrl = `https://wa.me/${APP_CONFIG.adminWhatsApp}?text=${encodeURIComponent(waMessage)}`;
   setTimeout(() => {
