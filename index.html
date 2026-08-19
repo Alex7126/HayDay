@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌾 HayDay - Cruel vs Dráculas</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
     <header>
-      <img src="logo.png" alt="Cruel vs Dráculas" class="main-logo">
+      <!-- Logo Oficial Hay Day -->
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Hay_Day_logo.png" alt="Hay Day Logo" class="main-logo">
       <p>🌾 Almacén Comunitario: Crueles & Dráculas 🚜</p>
     </header>
 
@@ -36,7 +36,7 @@
 
       <div class="stock-badge" style="background:#fff9db; color:#8d5b2d; border-color:#ffe066;">
         <span>📦 Productos en tu pedido:</span>
-        <strong id="currentOrderCount">0 productos</strong>
+        <strong id="currentOrderCount">0 productos seleccionados</strong>
       </div>
     </section>
 
@@ -53,10 +53,10 @@
     </main>
   </div>
 
-  <!-- Gallinita espía animada -->
-  <div id="peeking-chicken" class="peeking-chicken hidden">
-    <div class="chicken-bubble">👀 ¡Pío!</div>
-    <img src="gallina.png" alt="Gallina Espía" style="width: 65px; height: auto; display: block;">
+  <!-- Gallina 3D viajera por toda la pantalla -->
+  <div id="roaming-chicken" class="roaming-chicken" style="top: 15%; left: 80%;">
+    <div class="chicken-bubble" id="chicken-bubble">👀 ¡Vigilando!</div>
+    <img src="gallina.png" alt="Gallina 3D" class="chicken-avatar" id="chicken-img">
   </div>
 
   <script src="config.js"></script>
